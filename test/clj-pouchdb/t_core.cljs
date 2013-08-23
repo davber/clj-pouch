@@ -82,4 +82,16 @@
            post-res (<! (core/put-doc db doc))
            att-res (<! (core/put-attachment db (:id post-res) "myatt" (:rev post-res) "My Blob" "text/plain"))]
        (is (not (:error att-res)))
-       (is= (type (<! (core/get-attachment db (:id post-res) "myatt"))) js/Blob)))))
+       (is= (type (<! (core/get-attachment db (:id post-res) "myatt"))) js/Blob)))
+
+   (testing "querying one document on a field using local function"
+     (reset-db)
+     (let [doc {:name "Bo"}
+           doc2 {:name "Dave"}
+           put-res (<! (core/bulk-docs db [doc doc2]))
+           query-res (<! (core/query db (js* "function (doc) { if (doc.name == 'Bo') emit(doc.name, doc); }")  {:reduce false}))
+           _ (print "query result is " query-res)
+           row (first (:rows query-res))]
+       (is (:rows query-res))
+       (is= (count (:rows query-res)) 1)
+       (is= (:key row) "Bo")))))

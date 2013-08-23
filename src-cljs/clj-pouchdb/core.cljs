@@ -164,11 +164,17 @@
     (.removeAttachment db docid attachmentid rev (responder c))
     c))
 
+(defn- create-mapper
+  "Create a proper view map function dealing with JS objects"
+  [mapper]
+  (if (string? mapper) mapper
+      (comp hash-to-obj mapper obj-to-hash)))
+
 (defn query
   "Query the database, returning channel to results"
   [db fun & [options]]
   (let [c (chan 1)]
-    (.query db fun (hash-to-obj options) (responder c))
+    (.query db (js-obj "map" fun) (hash-to-obj options) (responder c))
     c))
 
 (defn info
