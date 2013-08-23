@@ -1,3 +1,6 @@
 [submodule "core.async"]
 	path = core.async
 	url = https://github.com/clojure/core.async.git
+[submodule "pouchdb"]
+	path = pouchdb
+	url = git@github.com:davber/pouchdb.git

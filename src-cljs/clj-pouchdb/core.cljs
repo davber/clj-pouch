@@ -16,16 +16,60 @@
   [obj]
   (if obj (js->clj obj :keywordize-keys true) {}))
 
+(declare *blob-builder*)
+
+(defn- create-blob
+  "Create a Blob object from the given data and data type"
+  [data data-type]
+  (try
+    (js/Blob (array data) (js-obj "type" data-type))
+    (catch js/Error e
+      (when-not *blob-builder*
+      (set! *blob-builder*
+            (or js/WebKitBlobBuilder
+                js/MozBlobBuilder
+                js/MSBlobBuilder))
+      (cond
+       (and (.-name e) "TypeError" *blob-builder*)
+       (let [bb (*blob-builder*.)]
+         (.append bb data)
+         (let [blob (.getBlob bb data-type)]
+           blob))
+       (= (.-name e) "InvalidStateError")
+       (js/Blob (array data) (js-obj "type" data-type))
+       true
+       (throw (js/Error. "Cannot create blob on this platform")))))))
+
+(defmulti to-blob type)
+(defmethod to-blob (type "foo")
+  [str]
+  (let [blob (create-blob str "text/plain")]
+    blob))
+(defmethod to-blob js/Blob
+  [blob]
+  blob)
+(defmethod to-blob :default
+  [obj]
+  (throw (js/Error. (str "to-blob with strange value " obj " of type " (type obj)))))
+
 (defn- create-error
   "Create an error hash from an error, having :error as the sole key"
   [err]
   (when err {:error (obj-to-hash err)}))
 
+(defmulti create-result type)
+(defmethod create-result js/Blob
+  [blob]
+  blob)
+(defmethod create-result :default
+  [jso]
+  (obj-to-hash jso))
+
 (defn- responder
   "Create am [err resp] callback putting a proper structure to the given channel"
   [c]
   (fn [err resp]
-    (let [obj (or (create-error err) (obj-to-hash resp))]
+    (let [obj (or (create-error err) (create-result resp))]
       (put! c obj))))
 
 (defn create-db
@@ -103,7 +147,7 @@
   "Put an attachment to a document, returning channel to result"
   [db docid attachmentid rev doc type]
   (let [c (chan 1)]
-    (.putAttachment db docid attachmentid rev doc type (responder c))
+    (.putAttachment db docid attachmentid rev (to-blob doc) type (responder c))
     c))
 
 (defn get-attachment

@@ -16,5 +16,5 @@
                         :compiler {:output-to "target/js/test.js"
                                    :optimizations :whitespace
                                    :pretty-print true
-                                   :foreign-libs [{:file "js/pouchdb.js" :provides ["nat.pouchdb"]}]}}]
+                                   :foreign-libs [{:file "pouchdb/dist/pouchdb-nightly.js" :provides ["nat.pouchdb"]}]}}]
               :test-commands {"unit-tests" ["runners/runphantom.js" "target/js/test.js"]}})

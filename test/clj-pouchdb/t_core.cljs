@@ -74,4 +74,12 @@
      (let [docs [{:name "Bo"} {:name "Nisse"}]
            post-res (<! (core/bulk-docs db docs))]
        (is (not (:error post-res)))
-       (is= (:total_rows (<! (core/all-docs db))) 2)))))
+       (is= (:total_rows (<! (core/all-docs db))) 2)))
+
+   (testing "adding attachment works"
+     (reset-db)
+     (let [doc {:name "Bo"}
+           post-res (<! (core/put-doc db doc))
+           att-res (<! (core/put-attachment db (:id post-res) "myatt" (:rev post-res) "My Blob" "text/plain"))]
+       (is (not (:error att-res)))
+       (is= (type (<! (core/get-attachment db (:id post-res) "myatt"))) js/Blob)))))
