@@ -46,7 +46,6 @@
   (let [opts (hash-to-obj options)
         js-doc (hash-to-obj doc)
         c (chan 1)]
-    (print "put-doc with opts " opts " and doc " doc " and js-doc " js-doc)
     (.put db js-doc opts (responder c))
     c))
 
@@ -71,14 +70,14 @@
   "Remove document, returning channel to result"
   [db doc & [options]]
   (let [c (chan 1)]
-    (.remove db doc (hash-to-obj options) (responder c))
+    (.remove db (hash-to-obj doc) (hash-to-obj options) (responder c))
     c))
 
 (defn bulk-docs
   "Create a batch of documents, returning channel to result"
   [db docs & [options]]
   (let [c (chan 1)]
-    (.bulkDocs db docs (hash-to-obj options) (responder c))
+    (.bulkDocs db (js-obj "docs" (hash-to-obj docs)) (hash-to-obj options) (responder c))
     c))
 
 (defn all-docs
