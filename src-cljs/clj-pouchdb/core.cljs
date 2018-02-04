@@ -66,7 +66,7 @@
   (obj-to-hash jso))
 
 (defn- responder
-  "Create am [err resp] callback putting a proper structure to the given channel"
+  "Create an [err resp] callback putting a proper structure to the given channel"
   [c]
   (fn [err resp]
     (let [obj (or (create-error err) (create-result resp))]
